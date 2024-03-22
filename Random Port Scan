@@ -1,0 +1,133 @@
+#python
+
+import socket
+import random
+import time
+
+def scan_ports(ip, ports):
+    open_ports = []
+    for port in ports:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(1)  # Adjust timeout as needed
+                s.connect((ip, port))
+                open_ports.append(port)
+        except:
+            pass
+    return open_ports
+
+def main():
+    network = "192.168.1."
+    ports_to_scan = [21, 22, 80, 443, 8080]  # Example ports to scan
+
+    for i in range(1, 255):
+        ip = network + str(random.randint(1, 254))
+        print(f"Scanning {ip}...")
+        open_ports = scan_ports(ip, ports_to_scan)
+        if open_ports:
+            print(f"Open ports on {ip}: {open_ports}")
+        else:
+            print(f"No open ports found on {ip}")
+        
+        # Generate random delay between 1 and 7 seconds
+        delay = random.randint(1, 7)
+        print(f"Waiting for {delay} seconds before next scan...")
+        time.sleep(delay)
+
+if __name__ == "__main__":
+    main()
+
+
+
+#____________________________________________________________________________________________________
+
+
+
+#powershell
+
+function Scan-Ports {
+    param (
+        [string]$ip,
+        [int[]]$ports
+    )
+    $openPorts = @()
+    foreach ($port in $ports) {
+        try {
+            $tcpClient = New-Object System.Net.Sockets.TcpClient
+            $tcpClient.Connect($ip, $port)
+            $tcpClient.Close()
+            $openPorts += $port
+        } catch {
+            # Port is closed or unreachable
+        }
+    }
+    return $openPorts
+}
+
+function Main {
+    $network = "192.168.1."
+    $portsToScan = @(21, 22, 80, 443, 8080)  # Example ports to scan
+
+    for ($i = 1; $i -le 254; $i++) {
+        $ip = $network + (Get-Random -Minimum 1 -Maximum 254)
+        Write-Host "Scanning $ip..."
+        $openPorts = Scan-Ports -ip $ip -ports $portsToScan
+        if ($openPorts) {
+            Write-Host "Open ports on $ip: $($openPorts -join ', ')"
+        } else {
+            Write-Host "No open ports found on $ip"
+        }
+
+        # Generate random delay between 1 and 7 seconds
+        $delay = Get-Random -Minimum 1 -Maximum 8
+        Write-Host "Waiting for $delay seconds before next scan..."
+        Start-Sleep -Seconds $delay
+    }
+}
+
+Main
+
+
+
+#____________________________________________________________________________________________________
+
+
+
+#bash
+
+#!/bin/bash
+
+# Function to scan ports
+scan_ports() {
+    ip=$1
+    ports=$2
+    open_ports=()
+    for port in "${ports[@]}"; do
+        (echo >/dev/tcp/$ip/$port) &>/dev/null && open_ports+=($port)
+    done
+    echo "${open_ports[@]}"
+}
+
+# Main function
+main() {
+    network="192.168.1."
+    ports_to_scan=(21 22 80 443 8080)  # Example ports to scan
+
+    for ((i = 1; i <= 254; i++)); do
+        ip="$network$((RANDOM%254+1))"
+        echo "Scanning $ip..."
+        open_ports=$(scan_ports "$ip" "${ports_to_scan[@]}")
+        if [ -n "$open_ports" ]; then
+            echo "Open ports on $ip: ${open_ports[*]}"
+        else
+            echo "No open ports found on $ip"
+        fi
+
+        # Generate random delay between 1 and 7 seconds
+        delay=$((RANDOM%7+1))
+        echo "Waiting for $delay seconds before next scan..."
+        sleep "$delay"
+    done
+}
+
+main
